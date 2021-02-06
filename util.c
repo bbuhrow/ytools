@@ -28,8 +28,6 @@ SOFTWARE.
 #endif
 
 #include "ytools.h"
-#include <stdarg.h>     //va_start, va_end, va_list, ...
-#include <errno.h>      // strerror, errno ...
 
 // ============================================================================
 // precision time
@@ -498,7 +496,8 @@ void* xmalloc_align(size_t len)
     void* ptr = malloc(len);
 
 #elif defined (__GNUC__)
-    void* ptr = memalign(64, len);
+    //void* ptr = memalign(64, len);
+    void* ptr = aligned_alloc(64, len);
 
 #else
     void* ptr = malloc(len);

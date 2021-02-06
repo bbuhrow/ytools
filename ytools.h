@@ -32,6 +32,8 @@ SOFTWARE.
 #include <stddef.h>
 #include <time.h>
 #include <sys/types.h>
+#include <stdarg.h>     //va_start, va_end, va_list, ...
+#include <errno.h>      // strerror, errno ...
 
 #ifndef _MSC_VER
 #include <sys/time.h>	//for gettimeofday using gcc
@@ -297,9 +299,12 @@ extern "C" {
     void enqueue(Queue_t* Q, uint32_t e);
     Queue_t* newQueue(uint32_t sz, int isStack);
 
+// ============================================================================
+// logging
+// ============================================================================
 
-
-
+    void logprint(FILE* infile, char* args, ...);
+    void logprint_oc(const char* name, const char* method, char* args, ...);
 
 #ifdef __cplusplus
 }
