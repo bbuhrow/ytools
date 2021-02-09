@@ -38,7 +38,11 @@ SOFTWARE.
 #ifndef _MSC_VER
 #include <sys/time.h>	//for gettimeofday using gcc
 #include <unistd.h>
+#else
+#include <windows.h>
+#include <process.h>
 #endif
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -130,13 +134,6 @@ extern "C" {
 
 
 #ifdef _MSC_VER
-
-    struct timeval
-    {
-        long tv_sec;
-        long tv_usec;
-    };
-
     struct timezone
     {
         int  tz_minuteswest; /* minutes W of Greenwich */
@@ -152,7 +149,7 @@ extern "C" {
 #endif
 
     uint64_t ytools_read_clock(void);
-    uint64_t measure_processor_speed(void);
+    uint64_t measure_processor_speed(int millisec);
     int lock_thread_to_core(void);
     int unlock_thread_from_core(void);
     char* time_from_secs(char* str, unsigned long time);
@@ -312,4 +309,4 @@ extern "C" {
 
 
 
-#endif /* _YAFU_UTIL_H_ */
+#endif /* _YTOOLS_UTIL_H_ */

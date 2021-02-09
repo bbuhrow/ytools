@@ -396,12 +396,12 @@ uint64_t hash64(uint64_t in)
 hash_t* initHash(uint32_t elementSizeB, uint32_t pow2numElements)
 {
     hash_t* hashTable;
-    int i;
+    uint32_t i;
 
     hashTable = (hash_t*)xmalloc(sizeof(hash_t));
-    hashTable->hashKey = (uint64_t * *)xmalloc((1 << pow2numElements) * sizeof(uint64_t*));
-    hashTable->hashBins = (uint8_t * *)xmalloc((1 << pow2numElements) * sizeof(uint8_t*));
-    hashTable->binSize = (uint32_t*)xcalloc((1 << pow2numElements), sizeof(uint32_t));
+    hashTable->hashKey = (uint64_t * *)xmalloc((1ULL << pow2numElements) * sizeof(uint64_t*));
+    hashTable->hashBins = (uint8_t * *)xmalloc((1ULL << pow2numElements) * sizeof(uint8_t*));
+    hashTable->binSize = (uint32_t*)xcalloc((1ULL << pow2numElements), sizeof(uint32_t));
     hashTable->elementSizeB = elementSizeB;
     hashTable->numStored = 0;
     hashTable->numBinsPow2 = pow2numElements;
@@ -421,7 +421,7 @@ hash_t* initHash(uint32_t elementSizeB, uint32_t pow2numElements)
 
 void deleteHash(hash_t* hash)
 {
-    int i;
+    uint32_t i;
 
     for (i = 0; i < hash->numBins; i++)
     {
@@ -469,7 +469,7 @@ void hashPut(hash_t* hash, uint8_t* element, uint64_t key)
 void hashGet(hash_t* hash, uint64_t key, uint8_t* element)
 {
     uint32_t binNum = (uint32_t)((((key)+18932479UL) * 2654435761UL) >> (64 - hash->numBinsPow2));
-    int i;
+    uint32_t i;
 
     for (i = 0; i < hash->binSize[binNum]; i++)
     {
@@ -540,8 +540,6 @@ void* xrealloc(void* iptr, size_t len) {
 
 void get_computer_info(info_t* info, int do_print)
 {
-    int ret;
-
     info->idstr = (char*)malloc(256 * sizeof(char));
 
 #ifdef __APPLE__
@@ -563,7 +561,7 @@ void get_computer_info(info_t* info, int do_print)
 
 #else
 
-    ret = gethostname(info->sysname, sizeof(info->sysname) / sizeof(*info->sysname));
+    int ret = gethostname(info->sysname, sizeof(info->sysname) / sizeof(*info->sysname));
     info->sysname[(sizeof(info->sysname) - 1) / sizeof(*info->sysname)] = 0;	// null terminate
     if (ret != 0)
     {

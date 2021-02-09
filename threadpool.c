@@ -22,8 +22,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ----------------------------------------------------------------------*/
 
-#include "threadpool.h"
 #include <stdint.h>
+#include <stdio.h>
+#include "threadpool.h"
+
 
 #if defined(WIN32) || defined(_WIN64)
 DWORD WINAPI tpool_worker_main(LPVOID thread_data);

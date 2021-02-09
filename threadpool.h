@@ -41,8 +41,9 @@ extern "C" {
 #include <unistd.h>
 #endif
 
-#if defined(WIN32)
-
+#if defined(_WIN32) || defined(_WIN64)
+    // MINGW defines these too: mingw will use windows 
+    // threading instead of pthreads.
 #include <windows.h>
 #include <process.h>
 
