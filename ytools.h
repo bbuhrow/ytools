@@ -32,15 +32,16 @@ SOFTWARE.
 #include <stddef.h>
 #include <time.h>
 #include <sys/types.h>
-#include <stdarg.h>     //va_start, va_end, va_list, ...
+#include <stdarg.h>     // va_start, va_end, va_list, ...
 #include <errno.h>      // strerror, errno ...
 
-#ifndef _MSC_VER
-#include <sys/time.h>	//for gettimeofday using gcc
-#include <unistd.h>
-#else
+#ifdef _MSC_VER
 #include <windows.h>
 #include <process.h>
+#include <winsock.h>
+#else
+#include <sys/time.h>	//for gettimeofday using gcc
+#include <unistd.h>
 #endif
 
 
@@ -149,7 +150,7 @@ extern "C" {
 #endif
 
     uint64_t ytools_read_clock(void);
-    uint64_t measure_processor_speed(int millisec);
+    uint64_t measure_processor_speed(void);
     int lock_thread_to_core(void);
     int unlock_thread_from_core(void);
     char* time_from_secs(char* str, unsigned long time);
