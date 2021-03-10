@@ -305,16 +305,29 @@ void get_random_seeds(uint32_t *seed1, uint32_t *seed2) {
 }
 
 // Knuth's 64 bit MMIX LCG, using a global 64 bit state variable.
-uint32_t lcg_rand_32(uint32_t lower, uint32_t upper, uint64_t* state)
+uint32_t lcg_rand_32(uint64_t* state)
+{
+    // advance the state of the LCG and return the appropriate result
+    *state = 6364136223846793005ULL * (*state) + 1442695040888963407ULL;
+    return (uint32_t)(*state);
+}
+
+uint32_t lcg_rand_32_range(uint32_t lower, uint32_t upper, uint64_t* state)
 {
     // advance the state of the LCG and return the appropriate result
     *state = 6364136223846793005ULL * (*state) + 1442695040888963407ULL;
     return lower + (uint32_t)(
         (double)(upper - lower) * (double)((*state) >> 12) * INV_2_POW_52);
-
 }
 
-uint64_t lcg_rand_64(uint64_t lower, uint64_t upper, uint64_t* state)
+uint64_t lcg_rand_64(uint64_t* state)
+{
+    // advance the state of the LCG and return the appropriate result
+    *state = 6364136223846793005ULL * (*state) + 1442695040888963407ULL;
+    return *state;
+}
+
+uint64_t lcg_rand_64_range(uint64_t lower, uint64_t upper, uint64_t* state)
 {
     // advance the state of the LCG and return the appropriate result
     *state = 6364136223846793005ULL * (*state) + 1442695040888963407ULL;
@@ -1547,6 +1560,34 @@ int bin_search_uint32(int idp, int idm, uint32_t q, uint32_t *input)
 		next = -1;
 
 	return next;
+}
+
+int bin_search_uint64(int idp, int idm, uint64_t q, uint64_t* input)
+{
+    int next = (idp + idm) / 2;
+
+    while ((idp - idm) > 10)
+    {
+        if (input[next] > q)
+        {
+            idp = next;
+            next = (next + idm) / 2;
+        }
+        else
+        {
+            idm = next;
+            next = (idp + next) / 2;
+        }
+    }
+
+    for (next = idm; next < idm + 10; next++)
+        if (input[next] == q)
+            return next;
+
+    if (input[next] != q)
+        next = -1;
+
+    return next;
 }
 
 // ============================================================================

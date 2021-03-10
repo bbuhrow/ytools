@@ -160,8 +160,10 @@ extern "C" {
 // ============================================================================
 
     void get_random_seeds(uint32_t* seed1, uint32_t* seed2);
-    uint32_t lcg_rand_32(uint32_t lower, uint32_t upper, uint64_t* state);
-    uint64_t lcg_rand_64(uint64_t lower, uint64_t upper, uint64_t* state);
+    uint32_t lcg_rand_32(uint64_t* state);
+    uint64_t lcg_rand_64(uint64_t* state);
+    uint32_t lcg_rand_32_range(uint32_t lower, uint32_t upper, uint64_t* state);
+    uint64_t lcg_rand_64_range(uint64_t lower, uint64_t upper, uint64_t* state);
     double lcg_rand_d(uint64_t* state);
 
 // ============================================================================
@@ -275,7 +277,7 @@ extern "C" {
 // ============================================================================
 
     int bin_search_uint32(int idp, int idm, uint32_t q, uint32_t* input);
-
+    int bin_search_uint64(int idp, int idm, uint64_t q, uint64_t* input);
 
 // ============================================================================
 // queue/stack
