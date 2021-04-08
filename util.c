@@ -27,6 +27,7 @@ SOFTWARE.
 #pragma intrinsic(__rdtsc)
 #endif
 
+#include <stdio.h>
 #include "ytools.h"
 
 // ============================================================================
@@ -83,92 +84,8 @@ int unlock_thread_from_core(void)
     return EXIT_FAILURE;
 }
 
-double cycles_per_second = 0.0;
-double ticks_per_second = 0.0;
-double cycles_per_tick = 0.0;
-
-uint64_t measure_processor_speed(int millisec)
-{
-    unsigned long long cycles;
-
-    lock_thread_to_core();
-    cycles = __rdtsc();
-    Sleep(millisec);
-    cycles = __rdtsc() - cycles;
-    unlock_thread_from_core();
-    cycles_per_second = 10.0 * (double)cycles;
-
-    if (ticks_per_second == 0.0)
-    {
-        LARGE_INTEGER ll;
-        QueryPerformanceFrequency(&ll);
-        ticks_per_second = (double)ll.QuadPart;
-        cycles_per_tick = cycles_per_second / ticks_per_second;
-    }
-    return cycles;
-}
-
-double get_tsc_time(void)
-{
-    if (cycles_per_second == 0.0)
-        measure_processor_speed(100);
-    return __rdtsc() / cycles_per_second;
-}
-
-double get_pfc_time(void)
-{
-    LARGE_INTEGER ll;
-
-    if (ticks_per_second == 0.0)
-        measure_processor_speed(100);
-    QueryPerformanceCounter(&ll);
-    return ll.QuadPart / ticks_per_second;
-}
-
-#else
-
-double cycles_per_second = 0.0;
-
-uint64_t measure_processor_speed(void)
-{
-    uint64_t cycles;
-    struct timeval start, stop;
-    double t_time;
-
-    gettimeofday(&start, NULL);
-
-    cycles = ytools_read_clock();
-    do
-    {
-        gettimeofday(&stop, NULL);
-        t_time = ytools_difftime(&start, &stop);
-    } while (t_time < 0.1);
-    cycles = ytools_read_clock() - cycles;
-
-    return cycles;                  /* return cycles per second  */
-}
-
 #endif
 
-
-uint64_t ytools_read_clock(void)
-{
-#if defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__) )
-    uint32_t lo, hi;
-    asm("rdtsc":"=d"(hi), "=a"(lo));
-    return (uint64_t)hi << 32 | lo;
-
-#elif defined(_MSC_VER)
-    LARGE_INTEGER ll;
-    QueryPerformanceCounter(&ll);
-    return (uint64_t)(ll.QuadPart * cycles_per_tick);
-#else
-    struct timeval thistime;
-    gettimeofday(&thistime, NULL);
-    return (uint64_t)(cycles_per_second *
-        (thistime.tv_sec + thistime.tv_usec / 1000000.0));
-#endif
-}
 
 #ifdef _MSC_VER
 int gettimeofday(struct timeval* tv, struct timezone* tz)
@@ -289,8 +206,10 @@ void get_random_seeds(uint32_t *seed1, uint32_t *seed2) {
            the high-res timer (hopefully not correlated to the
            current time), and the process ID. Multithreaded
            applications should fold in the thread ID too */
+        struct timeval start;
+        gettimeofday(&start, NULL);
 
-        uint64_t high_res_time = ytools_read_clock();
+        uint64_t high_res_time = (uint64_t)start.tv_sec * 1000000 + (uint64_t)start.tv_usec;
         tmp_seed1 = ((uint32_t)(high_res_time >> 32) ^
             (uint32_t)time(NULL)) *
             (uint32_t)getpid();
@@ -551,7 +470,7 @@ void* xrealloc(void* iptr, size_t len) {
 // computer info
 // ============================================================================
 
-void get_computer_info(info_t* info, int do_print)
+void ytools_get_computer_info(info_t* info, int do_print)
 {
     info->idstr = (char*)malloc(256 * sizeof(char));
 
@@ -585,48 +504,14 @@ void get_computer_info(info_t* info, int do_print)
 
 #endif
 
-    extended_cpuid(info->idstr, &info->cachelinesize, &info->bSSE41Extensions,
-        &info->AVX, &info->AVX2, do_print);
+    ytools_extended_cpuid(info->idstr, &info->cachelinesize, &info->bSSE41Extensions,
+        &info->AVX, &info->AVX2, &info->BMI2, &info->AVX512F, &info->AVX512BW, &info->AVX512ER,
+        &info->AVX512PF, &info->AVX512CD, &info->AVX512VL, &info->AVX512IFMA, &info->AVX512DQ, do_print);
 
 #endif
     return;
 }
 
-const char* szFeatures[] =
-{
-    "x87 FPU On Chip",
-    "Virtual-8086 Mode Enhancement",
-    "Debugging Extensions",
-    "Page Size Extensions",
-    "Time Stamp Counter",
-    "RDMSR and WRMSR Support",
-    "Physical Address Extensions",
-    "Machine Check Exception",
-    "CMPXCHG8B Instruction",
-    "APIC On Chip",
-    "Unknown1",
-    "SYSENTER and SYSEXIT",
-    "Memory Type Range Registers",
-    "PTE Global Bit",
-    "Machine Check Architecture",
-    "Conditional Move/Compare Instruction",
-    "Page Attribute Table",
-    "36-bit Page Size Extension",
-    "Processor Serial Number",
-    "CFLUSH Extension",
-    "Unknown2",
-    "Debug Store",
-    "Thermal Monitor and Clock Ctrl",
-    "MMX Technology",
-    "FXSAVE/FXRSTOR",
-    "SSE Extensions",
-    "SSE2 Extensions",
-    "Self Snoop",
-    "Multithreading Technology",
-    "Thermal Monitor",
-    "Unknown4",
-    "Pending Break Enable"
-};
 
 /* macro to execute the x86 CPUID instruction. Note that
    this is more verbose than it needs to be; Intel Macs reserve
@@ -975,8 +860,9 @@ enum cpu_type ytools_get_cpu_type(void) {
 
 
 
-int extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
-    char* AVX, char* AVX2, int do_print)
+int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
+    char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
+    char* AVX512PF, char* AVX512CD, char* AVX512VL, char* AVX512IFMA, char* AVX512DQ, int do_print)
 {
     char CPUString[0x20];
     char CPUBrandString[0x40];
@@ -1053,6 +939,43 @@ int extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
 
     char    bSelfInit = 0;
     char    bFullyAssociative = 0;
+
+    const char* szFeatures[] =
+    {
+        "x87 FPU On Chip",
+        "Virtual-8086 Mode Enhancement",
+        "Debugging Extensions",
+        "Page Size Extensions",
+        "Time Stamp Counter",
+        "RDMSR and WRMSR Support",
+        "Physical Address Extensions",
+        "Machine Check Exception",
+        "CMPXCHG8B Instruction",
+        "APIC On Chip",
+        "Unknown1",
+        "SYSENTER and SYSEXIT",
+        "Memory Type Range Registers",
+        "PTE Global Bit",
+        "Machine Check Architecture",
+        "Conditional Move/Compare Instruction",
+        "Page Attribute Table",
+        "36-bit Page Size Extension",
+        "Processor Serial Number",
+        "CFLUSH Extension",
+        "Unknown2",
+        "Debug Store",
+        "Thermal Monitor and Clock Ctrl",
+        "MMX Technology",
+        "FXSAVE/FXRSTOR",
+        "SSE Extensions",
+        "SSE2 Extensions",
+        "Self Snoop",
+        "Multithreading Technology",
+        "Thermal Monitor",
+        "Unknown4",
+        "Pending Break Enable"
+    };
+
 
     *bSSE41Extensions = 0;
 
@@ -1421,10 +1344,55 @@ int extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
 
     CPUID2(0x7, 0, CPUInfo[0], CPUInfo[1], CPUInfo[2], CPUInfo[3]);
 
-    *AVX2 = (CPUInfo[1] & 0x20) || 0;
+    if (do_print)
+    {
+        printf("EAX=7 CPUID feature bits:\n");
+        printf("EAX=%08x\n", CPUInfo[0]);
+        printf("EBX=%08x\n", CPUInfo[1]);
+        printf("ECX=%08x\n", CPUInfo[2]);
+        printf("EDX=%08x\n", CPUInfo[3]);
+    }
+
+    *AVX2 = (CPUInfo[1] & (1 << 5)) || 0;
+    *BMI2 = (CPUInfo[1] & (1 << 8)) || 0;
+    *AVX512F = (CPUInfo[1] & (1 << 16)) || 0;
+    *AVX512DQ = (CPUInfo[1] & (1 << 17)) || 0;
+    *AVX512IFMA = (CPUInfo[1] & (1 << 21)) || 0;
+    *AVX512PF = (CPUInfo[1] & (1 << 26)) || 0;
+    *AVX512ER = (CPUInfo[1] & (1 << 27)) || 0;
+    *AVX512CD = (CPUInfo[1] & (1 << 28)) || 0;
+    *AVX512BW = (CPUInfo[1] & (1 << 30)) || 0;
+    *AVX512VL = (CPUInfo[1] & (1 << 31)) || 0;
 
     if ((*AVX2) && do_print)
         printf("\n\n\tAVX2 Extensions\n");
+
+    if ((*BMI2) && do_print)
+        printf("\n\n\tBMI2 Extensions\n");
+
+    if ((*AVX512F) && do_print)
+        printf("\n\n\tAVX512F Extensions\n");
+
+    if ((*AVX512DQ) && do_print)
+        printf("\n\n\tAVX512DQ Extensions\n");
+
+    if ((*AVX512IFMA) && do_print)
+        printf("\n\n\tAVX512IFMA Extensions\n");
+
+    if ((*AVX512PF) && do_print)
+        printf("\n\n\tAVX512PF Extensions\n");
+
+    if ((*AVX512ER) && do_print)
+        printf("\n\n\tAVX512ER Extensions\n");
+
+    if ((*AVX512CD) && do_print)
+        printf("\n\n\tAVX512CD Extensions\n");
+
+    if ((*AVX512BW) && do_print)
+        printf("\n\n\tAVX512BW Extensions\n");
+
+    if ((*AVX512VL) && do_print)
+        printf("\n\n\tAVX512VL Extensions\n");
 
     return  nRet;
 }

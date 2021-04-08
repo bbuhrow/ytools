@@ -149,22 +149,20 @@ extern "C" {
     int gettimeofday(struct timeval* tv, struct timezone* tz);
 #endif
 
-    uint64_t ytools_read_clock(void);
-    uint64_t measure_processor_speed(void);
-    int lock_thread_to_core(void);
-    int unlock_thread_from_core(void);
-    char* time_from_secs(char* str, unsigned long time);
+    extern int lock_thread_to_core(void);
+    extern int unlock_thread_from_core(void);
+    extern char* time_from_secs(char* str, unsigned long time);
 
 // ============================================================================
 // randomness
 // ============================================================================
 
-    void get_random_seeds(uint32_t* seed1, uint32_t* seed2);
-    uint32_t lcg_rand_32(uint64_t* state);
-    uint64_t lcg_rand_64(uint64_t* state);
-    uint32_t lcg_rand_32_range(uint32_t lower, uint32_t upper, uint64_t* state);
-    uint64_t lcg_rand_64_range(uint64_t lower, uint64_t upper, uint64_t* state);
-    double lcg_rand_d(uint64_t* state);
+    extern void get_random_seeds(uint32_t* seed1, uint32_t* seed2);
+    extern uint32_t lcg_rand_32(uint64_t* state);
+    extern uint64_t lcg_rand_64(uint64_t* state);
+    extern uint32_t lcg_rand_32_range(uint32_t lower, uint32_t upper, uint64_t* state);
+    extern uint64_t lcg_rand_64_range(uint64_t lower, uint64_t upper, uint64_t* state);
+    extern double lcg_rand_d(uint64_t* state);
 
 // ============================================================================
 // 64-bit hashing
@@ -181,21 +179,21 @@ extern "C" {
         uint32_t elementSizeB;
     } hash_t;
 
-    hash_t* initHash(uint32_t elementSizeB, uint32_t pow2numElements);
-    void deleteHash(hash_t* hash);
-    void hashPut(hash_t* hash, uint8_t* element, uint64_t key);
-    void hashGet(hash_t* hash, uint64_t key, uint8_t* element);
+    extern hash_t* initHash(uint32_t elementSizeB, uint32_t pow2numElements);
+    extern void deleteHash(hash_t* hash);
+    extern void hashPut(hash_t* hash, uint8_t* element, uint64_t key);
+    extern void hashGet(hash_t* hash, uint64_t key, uint8_t* element);
 
-    uint64_t hash64(uint64_t in);
+    extern uint64_t hash64(uint64_t in);
 
 // ============================================================================
 // allocation
 // ============================================================================
-    void aligned_free(void* ptr);
-    void* xmalloc_align(size_t len);
-    void* xmalloc(size_t len);
-    void* xcalloc(size_t num, size_t len);
-    void* xrealloc(void* iptr, size_t len);
+    extern void aligned_free(void* ptr);
+    extern void* xmalloc_align(size_t len);
+    extern void* xmalloc(size_t len);
+    extern void* xcalloc(size_t num, size_t len);
+    extern void* xrealloc(void* iptr, size_t len);
 
 // ============================================================================
 // computer info
@@ -218,6 +216,16 @@ extern "C" {
         char bSSE41Extensions;
         char AVX;
         char AVX2;
+        char BMI2;
+        char AVX512BW;
+        char AVX512DQ;
+        char AVX512ER;
+        char AVX512PF;
+        char AVX512CD;
+        char AVX512VL;
+        char AVX512IFMA;
+        char AVX512F;
+
 
     } info_t;
 
@@ -254,30 +262,31 @@ extern "C" {
         cpu_opteron,
     };
 
-    enum cpu_type ytools_get_cpu_type(void);
-    void ytools_get_cache_sizes(uint32_t* level1_size_out, uint32_t* level2_size_out);
-    void get_computer_info(info_t* info, int do_print);
-    void ytools_get_cache_sizes(uint32_t* level1_cache, uint32_t* level2_cache);
-    int extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
-        char* AVX, char* AVX2, int do_print);
+    extern enum cpu_type ytools_get_cpu_type(void);
+    extern void ytools_get_cache_sizes(uint32_t* level1_size_out, uint32_t* level2_size_out);
+    extern void ytools_get_computer_info(info_t* info, int do_print);
+    extern void ytools_get_cache_sizes(uint32_t* level1_cache, uint32_t* level2_cache);
+    extern int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
+        char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
+        char* AVX512PF, char* AVX512CD, char* AVX512VL, char* AVX512IFMA, char* AVX512DQ, int do_print);
 
 // ============================================================================
 // sorting
 // ============================================================================
 
-    int qcomp_int(const void* x, const void* y);
-    int qcomp_uint16(const void* x, const void* y);
-    int qcomp_uint32(const void* x, const void* y);
-    int qcomp_uint64(const void* x, const void* y);
-    int qcomp_double(const void* x, const void* y);
-    uint32_t* mergesort(uint32_t* a, uint32_t* b, int sz_a, int sz_b);
+    extern int qcomp_int(const void* x, const void* y);
+    extern int qcomp_uint16(const void* x, const void* y);
+    extern int qcomp_uint32(const void* x, const void* y);
+    extern int qcomp_uint64(const void* x, const void* y);
+    extern int qcomp_double(const void* x, const void* y);
+    extern uint32_t* mergesort(uint32_t* a, uint32_t* b, int sz_a, int sz_b);
 
 // ============================================================================
 // searching
 // ============================================================================
 
-    int bin_search_uint32(int idp, int idm, uint32_t q, uint32_t* input);
-    int bin_search_uint64(int idp, int idm, uint64_t q, uint64_t* input);
+    extern int bin_search_uint32(int idp, int idm, uint32_t q, uint32_t* input);
+    extern int bin_search_uint64(int idp, int idm, uint64_t q, uint64_t* input);
 
 // ============================================================================
 // queue/stack
@@ -293,18 +302,18 @@ extern "C" {
         int isStack;
     } Queue_t;
 
-    void clearQueue(Queue_t* Q);
-    uint32_t peekqueue(Queue_t* Q);
-    uint32_t dequeue(Queue_t* Q);
-    void enqueue(Queue_t* Q, uint32_t e);
-    Queue_t* newQueue(uint32_t sz, int isStack);
+    extern void clearQueue(Queue_t* Q);
+    extern uint32_t peekqueue(Queue_t* Q);
+    extern uint32_t dequeue(Queue_t* Q);
+    extern void enqueue(Queue_t* Q, uint32_t e);
+    extern Queue_t* newQueue(uint32_t sz, int isStack);
 
 // ============================================================================
 // logging
 // ============================================================================
 
-    void logprint(FILE* infile, char* args, ...);
-    void logprint_oc(const char* name, const char* method, char* args, ...);
+    extern void logprint(FILE* infile, char* args, ...);
+    extern void logprint_oc(const char* name, const char* method, char* args, ...);
 
 #ifdef __cplusplus
 }
