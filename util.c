@@ -27,8 +27,17 @@ SOFTWARE.
 #pragma intrinsic(__rdtsc)
 #endif
 
-#include <stdio.h>
+#if (defined(__unix__) || defined(__MINGW32__))
+#define asm __asm__
+#endif
+
+#if defined(WIN32)
+#include <Windows.h>
+#endif
+
 #include "ytools.h"
+#include <stdlib.h>
+#include <malloc.h>
 
 // ============================================================================
 // precision time
@@ -429,13 +438,31 @@ void* xmalloc_align(size_t len)
 
 #elif defined (__GNUC__)
     //void* ptr = memalign(64, len);
-    void* ptr = aligned_alloc(64, len);
+    void* ptr;
+    if ((len % 64) == 0)
+        ptr = aligned_alloc(64, len);
+    else
+        ptr = aligned_alloc(64, len + 64 - (len % 64));
 
+    //void* ptr;
+    //
+    //if ((len % sizeof(void *)) == 0)
+    //    ptr = posix_memalign(&ptr, 64, len);
+    //else
+    //    ptr = posix_memalign(&ptr, 64, len + 64 - (len % sizeof(void*)));
+    
 #else
     void* ptr = malloc(len);
 
 #endif
 
+    if (ptr == NULL)
+    {
+        if (ptr == NULL) {
+            printf("failed to allocate %u bytes in xmalloc_align\n", (uint32_t)len);
+            exit(-1);
+        }
+    }
     return ptr;
 }
 
@@ -486,23 +513,23 @@ void ytools_get_computer_info(info_t* info, int do_print)
     //read cache sizes
     ytools_get_cache_sizes(&info->L1cache, &info->L2cache);
 
-#if defined(WIN32)
-
-    info->sysname_sz = MAX_COMPUTERNAME_LENGTH + 1;
-    GetComputerName((LPWSTR)info->sysname, (LPDWORD)& info->sysname_sz);
-
-#else
-
-    int ret = gethostname(info->sysname, sizeof(info->sysname) / sizeof(*info->sysname));
-    info->sysname[(sizeof(info->sysname) - 1) / sizeof(*info->sysname)] = 0;	// null terminate
-    if (ret != 0)
-    {
-        printf("error occured when getting host name\n");
-        strcpy(info->sysname, "N/A");
-    }
-    info->sysname_sz = strlen(info->sysname);
-
-#endif
+//#if defined(WIN32)
+//
+//    info->sysname_sz = MAX_COMPUTERNAME_LENGTH + 1;
+//    GetComputerName((LPWSTR)info->sysname, (LPDWORD)& info->sysname_sz);
+//
+//#else
+//
+//    int ret = gethostname(info->sysname, sizeof(info->sysname) / sizeof(*info->sysname));
+//    info->sysname[(sizeof(info->sysname) - 1) / sizeof(*info->sysname)] = 0;	// null terminate
+//    if (ret != 0)
+//    {
+//        printf("error occured when getting host name\n");
+//        strcpy(info->sysname, "N/A");
+//    }
+//    info->sysname_sz = strlen(info->sysname);
+//
+//#endif
 
     ytools_extended_cpuid(info->idstr, &info->cachelinesize, &info->bSSE41Extensions,
         &info->AVX, &info->AVX2, &info->BMI2, &info->AVX512F, &info->AVX512BW, &info->AVX512ER,
@@ -520,7 +547,7 @@ void ytools_get_computer_info(info_t* info, int do_print)
 
 
 
-#if defined(__unix__) && defined(__x86_64__)
+#if (defined(__unix__) || defined(__MINGW32__)) && defined(__x86_64__)
 #define HAS_CPUID
 #define CPUID(code, a, b, c, d) 			\
 		asm volatile(					\

@@ -21,7 +21,7 @@
 # SOFTWARE.
 
 CC = gcc-7.3.0
-CFLAGS = -g
+CFLAGS = -g -std=c11
 WARN_FLAGS = -Wall # -Wconversion
 OPT_FLAGS = -O3
 INC = -I. 
