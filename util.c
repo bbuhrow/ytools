@@ -1140,7 +1140,7 @@ int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extension
             bMOVOptimization = (CPUInfo[0] & 0x2) || 0;
         }
     }
-    strcpy(idstr, CPUBrandString);
+    strncpy(idstr, CPUBrandString, 255);
     // Display all the information in user-friendly format.
     if (do_print)
         printf("\n\nCPU String: %s\n", CPUString);

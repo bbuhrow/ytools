@@ -25,6 +25,12 @@ SOFTWARE.
 #ifndef _YTOOLS_UTIL_H_
 #define _YTOOLS_UTIL_H_
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
@@ -44,9 +50,8 @@ SOFTWARE.
 #include <unistd.h>
 #endif
 
-
-#ifdef __cplusplus
-extern "C" {
+#ifdef __MINGW32__
+#include <Windows.h>
 #endif
 
 
