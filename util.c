@@ -1679,7 +1679,7 @@ void clearQueue(Queue_t* Q)
 }
 
 // ============================================================================
-// logging
+// logging and file i/o
 // ============================================================================
 
 void logprint(FILE* infile, char* args, ...)
@@ -1755,3 +1755,64 @@ void logprint_oc(const char* name, const char* method, char* args, ...)
 
     return;
 }
+
+char* get_full_line(char* line, int *sz, FILE* fid)
+{
+    // fid is open to a valid stream.
+    // if line is allocated (non-null), then use it, otherwise allocate it.
+    // return the (possibly modified) pointer to the next full line in the file.
+    // also return the updated size in the *sz pointer.
+    char* ptr;
+    char tmpline[1024];
+
+    if (line == NULL)
+    {
+        *sz = 1024;
+        line = (char*)malloc(1024 * sizeof(char));
+    }
+
+    strcpy(line, "");
+    do
+    {
+        int j;
+        while (1)
+        {
+            ptr = fgets(tmpline, 1024, fid);
+            strcpy(line + strlen(line), tmpline);
+
+            // stop if we didn't read anything
+            if ((feof(fid)) || (ptr == NULL))
+            {
+                free(line);
+                return NULL;
+            }
+
+            // if we got the end of the line, stop reading
+            if ((line[strlen(line) - 1] == 0xa) ||
+                (line[strlen(line) - 1] == 0xd))
+                break;
+
+            // else reallocate the buffer and get some more
+            *sz += 1024;
+            line = (char*)realloc(line, (strlen(line) + 1024) * sizeof(char));
+        }
+
+        // remove trailing LF and CRs from line
+        for (j = strlen(line) - 1; j > 0; j--)
+        {
+            switch (line[j])
+            {
+            case 13:
+            case 10:
+                line[j] = '\0';
+                break;
+            default:
+                j = 0;
+                break;
+            }
+        }
+    } while (strlen(line) == 0);
+
+    return line;
+}
+

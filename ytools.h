@@ -314,11 +314,12 @@ extern "C" {
     extern Queue_t* newQueue(uint32_t sz, int isStack);
 
 // ============================================================================
-// logging
+// logging and file i/o
 // ============================================================================
 
     extern void logprint(FILE* infile, char* args, ...);
     extern void logprint_oc(const char* name, const char* method, char* args, ...);
+    extern char* get_full_line(char* line, int* sz, FILE* fid);
 
 #ifdef __cplusplus
 }
