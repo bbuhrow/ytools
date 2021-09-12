@@ -1798,7 +1798,7 @@ char* get_full_line(char* line, int *sz, FILE* fid)
         }
 
         // remove trailing LF and CRs from line
-        for (j = strlen(line) - 1; j > 0; j--)
+        for (j = (int)strlen(line) - 1; j > 0; j--)
         {
             switch (line[j])
             {
