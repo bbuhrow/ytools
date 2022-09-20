@@ -499,7 +499,6 @@ void* xrealloc(void* iptr, size_t len) {
 
 void ytools_get_computer_info(info_t* info, int do_print)
 {
-    info->idstr = (char*)malloc(256 * sizeof(char));
 
 #ifdef __APPLE__
     // something in extended cpuid causes a segfault on mac builds.
@@ -532,7 +531,7 @@ void ytools_get_computer_info(info_t* info, int do_print)
 //#endif
 
     ytools_extended_cpuid(info->idstr, &info->cachelinesize, &info->bSSE41Extensions,
-        &info->AVX, &info->AVX2, &info->BMI2, &info->AVX512F, &info->AVX512BW, &info->AVX512ER,
+        &info->BMI1, &info->AVX, &info->AVX2, &info->BMI2, &info->AVX512F, &info->AVX512BW, &info->AVX512ER,
         &info->AVX512PF, &info->AVX512CD, &info->AVX512VL, &info->AVX512IFMA, &info->AVX512DQ, do_print);
 
 #endif
@@ -888,7 +887,7 @@ enum cpu_type ytools_get_cpu_type(void) {
 
 
 int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
-    char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
+    char* BMI1, char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
     char* AVX512PF, char* AVX512CD, char* AVX512VL, char* AVX512IFMA, char* AVX512DQ, int do_print)
 {
     char CPUString[0x20];
@@ -1380,6 +1379,7 @@ int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extension
         printf("EDX=%08x\n", CPUInfo[3]);
     }
 
+    *BMI1 = (CPUInfo[1] & (1 << 3)) || 0;
     *AVX2 = (CPUInfo[1] & (1 << 5)) || 0;
     *BMI2 = (CPUInfo[1] & (1 << 8)) || 0;
     *AVX512F = (CPUInfo[1] & (1 << 16)) || 0;
@@ -1390,6 +1390,9 @@ int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extension
     *AVX512CD = (CPUInfo[1] & (1 << 28)) || 0;
     *AVX512BW = (CPUInfo[1] & (1 << 30)) || 0;
     *AVX512VL = (CPUInfo[1] & (1 << 31)) || 0;
+
+    if ((*BMI1) && do_print)
+        printf("\n\n\tBMI1 Extensions\n");
 
     if ((*AVX2) && do_print)
         printf("\n\n\tAVX2 Extensions\n");

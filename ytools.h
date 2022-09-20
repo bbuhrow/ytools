@@ -216,9 +216,10 @@ extern "C" {
         char sysname[256];
         int sysname_sz;
 #endif
-        char *idstr;
+        char idstr[256];
         int cachelinesize;
         char bSSE41Extensions;
+        char BMI1;
         char AVX;
         char AVX2;
         char BMI2;
@@ -272,7 +273,7 @@ extern "C" {
     extern void ytools_get_computer_info(info_t* info, int do_print);
     extern void ytools_get_cache_sizes(uint32_t* level1_cache, uint32_t* level2_cache);
     extern int ytools_extended_cpuid(char* idstr, int* cachelinesize, char* bSSE41Extensions,
-        char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
+        char* BMI1, char* AVX, char* AVX2, char* BMI2, char* AVX512F, char* AVX512BW, char* AVX512ER,
         char* AVX512PF, char* AVX512CD, char* AVX512VL, char* AVX512IFMA, char* AVX512DQ, int do_print);
 
 // ============================================================================
