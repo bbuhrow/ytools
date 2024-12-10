@@ -11,3 +11,6 @@ Contains portable and simple but effective routines for:
 * Logging
 * Combinatorics
 * Queue/Stack storage on the heap
+* A threadpool using either pthreads or Windows synchronization functions
+** user-supplied dispatching and syncronization functions
+** arbitrary number of work functions
